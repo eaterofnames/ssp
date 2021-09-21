@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+# uses imagemagick to get a screenshot. Uploads it to a server you have,
+# and copies the resulting link to your x clipboard.
+# Depends on imagemagick, ssh, xclip, and basic shell knowledge.
+#
+# Alias it like: `alias ssp='ssp foo@bar.com' /path/to/your/server/images/ /domain/path`
+#       Example: `ssp foo bar.com /var/www/html/images/ /images/`
+# This sends the image to foo@bar to the filepath /var/www/html/images, and will
+# copy the resulting url to your clipboard.
+
+userName=$1
+serverName=$2
+serverFullPath=$3
+serverShortPath=$4
+screenshot_name="$(date +%s).png"
+
+import /tmp/${screenshot_name}
+rsync -e "ssh -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+	/tmp/${screenshot_name} \
+	${userName}@${serverName}:${serverFullPath}${screenshot_name}
+out="https://www.${serverName}${serverShortPath}${screenshot_name}"
+
+echo ${out} | xclip -selection c
+echo ${out}
